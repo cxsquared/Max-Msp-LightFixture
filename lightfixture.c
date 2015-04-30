@@ -28,6 +28,7 @@ void lightfixture_assist(t_lightfixture *x, void *b, long m, long a, char *s);
 
 void lightfixture_bang(t_lightfixture *x);
 void lightfixture_size(t_lightfixture *x, long i);
+void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
 
 //////////////////////// global class pointer variable
 void *lightfixture_class;
@@ -41,6 +42,7 @@ int C74_EXPORT main(void)
     
     class_addmethod(c, (method)lightfixture_bang, "bang", 0);
     class_addmethod(c, (method)lightfixture_size, "size", A_LONG, 0);
+    class_addmethod(c, (method)lightfixture_color, "color", A_GIMME, 0);
     
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)lightfixture_assist,	"assist", A_CANT, 0);
@@ -99,6 +101,9 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
         for (i=0; i < x->size; i++) {
             x->output[i] = 0;
         }
+        for (i=0; i< 4; i++){
+            //x->color[i] = 0;
+        }
         x->outlet2 = outlet_new((t_object *) x, NULL);
         x->outlet1 = outlet_new((t_object *) x, NULL);
     }
@@ -123,10 +128,49 @@ void lightfixture_size(t_lightfixture *x, long newSize) {
     int *temp = realloc(x->output, sizeof(long) * x->size);
     x->output = temp;
     
-    while (diff > 0){
-        object_post((t_object *) x, "new size - diff: %ld", x->size - diff);
+    while (diff > 0){ // I tried a for loop but just now realized that you have to initialize the i variable.
+        // object_post((t_object *) x, "new size - diff: %ld", x->size - diff);
         x->output[x->size-diff] = 0;
         diff--;
     }
+    lightfixture_bang(x);
+}
+
+void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) {
+    long i;
+    t_atom *ap;
+    
+    post("message selector is %s",s->s_name);
+    post("there are %ld arguments",argc);
+    
+    if (argc < 4) {
+        post("Color takes 4 ints (address, r, g, b)");
+        return;
+    }
+    
+    // increment ap each time to get to the next atom
+    for (i = 0, ap = argv; i < argc; i++, ap++) {
+        switch (atom_gettype(ap)) {
+            case A_LONG:
+                post("%ld: %ld",i+1,atom_getlong(ap));
+                if (i == 0) {
+                    if (atom_getlong(ap) + 3 > x->size) {
+                        lightfixture_size(x, atom_getlong(ap) + 3);
+                    }
+                    // Clear old values
+                    x->output[x->color[0]] = 0;
+                    x->output[x->color[0] + 1] = 0;
+                    x->output[x->color[0] + 2] = 0;
+                } else {
+                    x->output[x->color[0]+i-1] = atom_getlong(ap);
+                }
+                x->color[i] = atom_getlong(ap);
+                break;
+            default:
+                post("%ld: unknown atom type (%ld)", i+1, atom_gettype(ap));
+                break;
+        }
+    }
+    
     lightfixture_bang(x);
 }
