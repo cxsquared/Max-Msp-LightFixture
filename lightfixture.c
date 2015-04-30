@@ -17,7 +17,7 @@ typedef struct _lightfixture
     long size;
     long* output;
     long address;
-    long colorIndex;
+    long color[4];
 } t_lightfixture;
 
 ///////////////////////// function prototypes
@@ -27,7 +27,7 @@ void lightfixture_free(t_lightfixture *x);
 void lightfixture_assist(t_lightfixture *x, void *b, long m, long a, char *s);
 
 void lightfixture_bang(t_lightfixture *x);
-void lightfixture_message(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
+void lightfixture_size(t_lightfixture *x, long i);
 
 //////////////////////// global class pointer variable
 void *lightfixture_class;
@@ -40,6 +40,7 @@ int C74_EXPORT main(void)
     c = class_new("lightfixture", (method)lightfixture_new, (method)lightfixture_free, (long)sizeof(t_lightfixture), 0L /* leave NULL!! */, A_GIMME, 0);
     
     class_addmethod(c, (method)lightfixture_bang, "bang", 0);
+    class_addmethod(c, (method)lightfixture_size, "size", A_LONG, 0);
     
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)lightfixture_assist,	"assist", A_CANT, 0);
@@ -114,4 +115,18 @@ void lightfixture_bang(t_lightfixture *x) {
     }
     outlet_list(x->outlet1,0L,x->size,&myList);
     outlet_int(x->outlet2, x->size);
+}
+
+void lightfixture_size(t_lightfixture *x, long newSize) {
+    int diff = newSize - x->size;
+    x->size = newSize;
+    int *temp = realloc(x->output, sizeof(long) * x->size);
+    x->output = temp;
+    
+    while (diff > 0){
+        object_post((t_object *) x, "new size - diff: %ld", x->size - diff);
+        x->output[x->size-diff] = 0;
+        diff--;
+    }
+    lightfixture_bang(x);
 }
