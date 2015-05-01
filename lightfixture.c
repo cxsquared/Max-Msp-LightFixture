@@ -27,7 +27,8 @@ void lightfixture_free(t_lightfixture *x);
 void lightfixture_assist(t_lightfixture *x, void *b, long m, long a, char *s);
 
 void lightfixture_bang(t_lightfixture *x);
-void lightfixture_size(t_lightfixture *x, long i);
+void lightfixture_size(t_lightfixture *x, long newSize);
+void lightfixture_address(t_lightfixture *x, long newAddress);
 void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
 
 //////////////////////// global class pointer variable
@@ -42,6 +43,7 @@ int C74_EXPORT main(void)
     
     class_addmethod(c, (method)lightfixture_bang, "bang", 0);
     class_addmethod(c, (method)lightfixture_size, "size", A_LONG, 0);
+    class_addmethod(c, (method)lightfixture_address, "address", A_LONG, 0);
     class_addmethod(c, (method)lightfixture_color, "color", A_GIMME, 0);
     
     /* you CAN'T call this from the patcher */
@@ -111,15 +113,22 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
 }
 
 void lightfixture_bang(t_lightfixture *x) {
-    t_atom myList[x->size];
+    t_atom data[x->address + x->size];
+    t_atom out[x->size];
     short i;
 
-    for (i=0; i < x->size; i++) {
+    for (i=0; i < x->address + x->size; i++) {
         //object_post((t_object *) x, "output &ld is &ld", i, x->output[i]);
-        atom_setlong(myList+i,x->output[i]);
+        if (i >= x->address){
+            atom_setlong(data+i,x->output[i - x->address]);
+            atom_setlong(out+i-x->address, x->output[i - x->address]);
+        } else {
+            post("Bellow address");
+            atom_setlong(data+i, 0);
+        }
     }
-    outlet_list(x->outlet1,0L,x->size,&myList);
-    outlet_int(x->outlet2, x->size);
+    outlet_list(x->outlet1,0L,x->size + x->address,&data);
+    outlet_list(x->outlet2, 0L,x->size, &out);
 }
 
 void lightfixture_size(t_lightfixture *x, long newSize) {
@@ -136,15 +145,20 @@ void lightfixture_size(t_lightfixture *x, long newSize) {
     lightfixture_bang(x);
 }
 
+void lightfixture_address(t_lightfixture *x, long newAddress) {
+    x->address = newAddress;
+    lightfixture_bang(x);
+}
+
 void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) {
     long i;
     t_atom *ap;
     
-    post("message selector is %s",s->s_name);
-    post("there are %ld arguments",argc);
+    //post("message selector is %s",s->s_name);
+    //post("there are %ld arguments",argc);
     
     if (argc < 4) {
-        post("Color takes 4 ints (address, r, g, b)");
+        //post("Color takes 4 ints (address, r, g, b)");
         return;
     }
     
@@ -152,7 +166,7 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
     for (i = 0, ap = argv; i < argc; i++, ap++) {
         switch (atom_gettype(ap)) {
             case A_LONG:
-                post("%ld: %ld",i+1,atom_getlong(ap));
+                //post("%ld: %ld",i+1,atom_getlong(ap));
                 if (i == 0) {
                     if (atom_getlong(ap) + 3 > x->size) {
                         lightfixture_size(x, atom_getlong(ap) + 3);
@@ -167,7 +181,7 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
                 x->color[i] = atom_getlong(ap);
                 break;
             default:
-                post("%ld: unknown atom type (%ld)", i+1, atom_gettype(ap));
+                //post("%ld: unknown atom type (%ld)", i+1, atom_gettype(ap));
                 break;
         }
     }
