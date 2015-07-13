@@ -14,10 +14,12 @@ typedef struct _lightfixture
     t_object ob;			// the object itself (must be first)
     void *outlet1;
     void *outlet2;
-    long size;
-    long* output;
+    long outputSize;
+    long *output;
     long address;
     long color[4];
+    long *data;
+    long dataSize;
 } t_lightfixture;
 
 ///////////////////////// function prototypes
@@ -30,6 +32,7 @@ void lightfixture_bang(t_lightfixture *x);
 void lightfixture_size(t_lightfixture *x, long newSize);
 void lightfixture_address(t_lightfixture *x, long newAddress);
 void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
+void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
 
 //////////////////////// global class pointer variable
 void *lightfixture_class;
@@ -45,6 +48,7 @@ int C74_EXPORT main(void)
     class_addmethod(c, (method)lightfixture_size, "size", A_LONG, 0);
     class_addmethod(c, (method)lightfixture_address, "address", A_LONG, 0);
     class_addmethod(c, (method)lightfixture_color, "color", A_GIMME, 0);
+    class_addmethod(c, (method)lightfixture_list, "list", A_GIMME, 0);
     
     /* you CAN'T call this from the patcher */
     class_addmethod(c, (method)lightfixture_assist,	"assist", A_CANT, 0);
@@ -68,7 +72,13 @@ void lightfixture_assist(t_lightfixture *x, void *b, long m, long a, char *s)
 
 void lightfixture_free(t_lightfixture *x)
 {
-    free(x->output);
+    if (x->output != NULL){
+        free(x->output);
+    }
+
+    if (x->data != NULL) {
+        free(x->data);
+    }
 }
 
 void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
@@ -77,7 +87,7 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
     long i;
     
     // object instantiation
-    if (x = (t_lightfixture *)object_alloc(lightfixture_class)) {
+    if (x == ((t_lightfixture *)object_alloc(lightfixture_class))) {
         if (argc != 2) {
             return NULL;
         }
@@ -91,7 +101,8 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
                 if (i == 0){
                     x->address = atom_getlong(argv+i);
                 } else if (i == 1){
-                    x->size = atom_getlong(argv+1);
+                    x->outputSize = atom_getlong(argv+1);
+                    x->dataSize = atom_getlong(argv+1);
                 }
                 object_post((t_object *)x, "arg %ld: long (%ld)", i, atom_getlong(argv+i));
             } else {
@@ -99,13 +110,13 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
             }
         }
         
-        x->output = (long*)malloc(sizeof(long) * x->size);
-        for (i=0; i < x->size; i++) {
+        x->output = (long*)malloc(sizeof(long) * x->outputSize);
+        x->data = (long*)malloc(sizeof(long) * x->dataSize);
+        for (i=0; i < x->outputSize; i++) {
             x->output[i] = 0;
+            x->data[i] = 0;
         }
-        for (i=0; i< 4; i++){
-            //x->color[i] = 0;
-        }
+        
         x->outlet2 = outlet_new((t_object *) x, NULL);
         x->outlet1 = outlet_new((t_object *) x, NULL);
     }
@@ -113,33 +124,42 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
 }
 
 void lightfixture_bang(t_lightfixture *x) {
-    t_atom data[x->address + x->size];
-    t_atom out[x->size];
-    short i;
-
-    for (i=0; i < x->address + x->size; i++) {
-        //object_post((t_object *) x, "output &ld is &ld", i, x->output[i]);
-        if (i >= x->address){
-            atom_setlong(data+i,x->output[i - x->address]);
-            atom_setlong(out+i-x->address, x->output[i - x->address]);
-        } else {
-            post("Bellow address");
-            atom_setlong(data+i, 0);
+    // Figuring out full output size
+    if (x->outputSize + x->address > x->dataSize) {
+        long oldSize = x->dataSize;
+        x->dataSize = x->outputSize + x->address;
+        long *temp = realloc(x->data, sizeof(long) * x->dataSize);
+        x->data = temp;
+        short i;
+        for (i = oldSize; i < x->dataSize; i++) {
+            x->data[i] = 0;
         }
     }
-    outlet_list(x->outlet1,0L,x->size + x->address,&data);
-    outlet_list(x->outlet2, 0L,x->size, &out);
+    
+    t_atom_long fullout[x->dataSize];
+    t_atom_long smallout[x->outputSize];
+    short i;
+    for (i=0; i < x->dataSize; i++) {
+        if (i >= x->address && i < x->address+x->outputSize){
+            atom_setlong(fullout+i,x->output[i - x->address]);
+            atom_setlong(smallout+i-x->address, x->output[i - x->address]);
+        } else {
+            atom_setlong(fullout+i,x->data[i]);
+        }
+    }
+    outlet_list(x->outlet1,0L,x->outputSize + x->address, &fullout);
+    outlet_list(x->outlet2,0L, x->outputSize, &smallout);
 }
 
 void lightfixture_size(t_lightfixture *x, long newSize) {
-    int diff = newSize - x->size;
-    x->size = newSize;
-    int *temp = realloc(x->output, sizeof(long) * x->size);
+    long diff = newSize - x->outputSize;
+    x->outputSize = newSize;
+    long *temp = realloc(x->output, sizeof(long) * x->outputSize);
     x->output = temp;
     
     while (diff > 0){ // I tried a for loop but just now realized that you have to initialize the i variable.
         // object_post((t_object *) x, "new size - diff: %ld", x->size - diff);
-        x->output[x->size-diff] = 0;
+        x->output[x->outputSize-diff] = 0;
         diff--;
     }
     lightfixture_bang(x);
@@ -158,7 +178,7 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
     //post("there are %ld arguments",argc);
     
     if (argc < 4) {
-        //post("Color takes 4 ints (address, r, g, b)");
+        post("Color takes 4 ints (address, r, g, b)");
         return;
     }
     
@@ -168,7 +188,7 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
             case A_LONG:
                 //post("%ld: %ld",i+1,atom_getlong(ap));
                 if (i == 0) {
-                    if (atom_getlong(ap) + 3 > x->size) {
+                    if (atom_getlong(ap) + 3 > x->outputSize) {
                         lightfixture_size(x, atom_getlong(ap) + 3);
                     }
                     // Clear old values
@@ -186,5 +206,20 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
         }
     }
     
+    lightfixture_bang(x);
+}
+
+void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) {
+    post("List in ");
+    if (x->dataSize < argc){
+        x->dataSize = argc;
+        int *temp = realloc(x->data, sizeof(long) * x->dataSize);
+        x->data = temp;
+    }
+    
+    short i;
+    for (i = 0; i < argc; i++) {
+        x->data[i] = argv+i;
+    }
     lightfixture_bang(x);
 }
