@@ -29,6 +29,7 @@ void lightfixture_free(t_lightfixture *x);
 void lightfixture_assist(t_lightfixture *x, void *b, long m, long a, char *s);
 
 void lightfixture_bang(t_lightfixture *x);
+void lightfixture_clear(t_lightfixture *x);
 void lightfixture_size(t_lightfixture *x, long newSize);
 void lightfixture_address(t_lightfixture *x, long newAddress);
 void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
@@ -45,6 +46,7 @@ int C74_EXPORT main(void)
     c = class_new("lightfixture", (method)lightfixture_new, (method)lightfixture_free, (long)sizeof(t_lightfixture), 0L /* leave NULL!! */, A_GIMME, 0);
     
     class_addmethod(c, (method)lightfixture_bang, "bang", 0);
+    class_addmethod(c, (method)lightfixture_clear, "clear", 0);
     class_addmethod(c, (method)lightfixture_size, "size", A_LONG, 0);
     class_addmethod(c, (method)lightfixture_address, "address", A_LONG, 0);
     class_addmethod(c, (method)lightfixture_color, "color", A_GIMME, 0);
@@ -137,8 +139,15 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
     return (x);
 }
 
+void lightfixture_clear(t_lightfixture *x) {
+    int i;
+    for (i=0; i < x->outputSize; i++) {
+        x->output[i] = 0;
+    }
+}
+
 void lightfixture_bang(t_lightfixture *x) {
-    post("Banged!");
+    //post("Banged!");
     // Figuring out full output size
     if (x->outputSize + x->address > x->dataSize) {
         long oldSize = x->dataSize;
@@ -226,8 +235,9 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
 }
 
 void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) {
-    post("List in ");
+    //post("List in ");
     if (x->dataSize < argc){
+        post("Making data bigger");
         x->dataSize = argc;
         int *temp = realloc(x->data, sizeof(long) * x->dataSize);
         x->data = temp;
@@ -235,7 +245,8 @@ void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) 
     
     short i;
     for (i = 0; i < argc; i++) {
-        x->data[i] = argv+i;
+        post("Data position %ld is set too %ld", i, atom_getlong(argv+i));
+        x->data[i] = atom_getlong(argv+i);
     }
     lightfixture_bang(x);
 }
