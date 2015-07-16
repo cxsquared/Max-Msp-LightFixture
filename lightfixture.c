@@ -34,6 +34,7 @@ void lightfixture_size(t_lightfixture *x, long newSize);
 void lightfixture_address(t_lightfixture *x, long newAddress);
 void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
 void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv);
+long sanatizeLong(long input);
 
 //////////////////////// global class pointer variable
 void *lightfixture_class;
@@ -139,6 +140,16 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
     return (x);
 }
 
+long sanatizeLong(long input) {
+    long output = input;
+    if (output > 255) {
+        output = 255;
+    } else if (output < 0) {
+        output = 0;
+    }
+    return output;
+}
+
 void lightfixture_clear(t_lightfixture *x) {
     int i;
     for (i=0; i < x->outputSize; i++) {
@@ -221,9 +232,13 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
                     x->output[x->color[0] + 1] = 0;
                     x->output[x->color[0] + 2] = 0;
                 } else {
-                    x->output[x->color[0]+i-1] = atom_getlong(ap);
+                    x->output[x->color[0]+i-1] = sanatizeLong(atom_getlong(ap));
                 }
-                x->color[i] = atom_getlong(ap);
+                if (i == 0) {
+                    x->color[i] = atom_getlong(ap);
+                } else {
+                    x->color[i] = sanatizeLong(atom_getlong(ap));
+                }
                 break;
             default:
                 //post("%ld: unknown atom type (%ld)", i+1, atom_gettype(ap));
@@ -246,7 +261,7 @@ void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) 
     short i;
     for (i = 0; i < argc; i++) {
         post("Data position %ld is set too %ld", i, atom_getlong(argv+i));
-        x->data[i] = atom_getlong(argv+i);
+        x->data[i] = sanatizeLong(atom_getlong(argv+i));
     }
     lightfixture_bang(x);
 }
