@@ -63,10 +63,19 @@ int C74_EXPORT main(void)
 void lightfixture_assist(t_lightfixture *x, void *b, long m, long a, char *s)
 {
     if (m == ASSIST_INLET) { // inlet
-        sprintf(s, "I am inlet %ld", a);
+        if (a == 0){
+            sprintf(s, "Changing the dmx variables.");
+        } else {
+            sprintf(s, "Full DMX message in");
+        }
+
     }
     else {	// outlet
-        sprintf(s, "I am outlet %ld", a);
+        if (a == 0) {
+            sprintf(s, "Full dmx message out.");
+        } else {
+            sprintf(s, "Light message out.");
+        }
     }
 }
 
@@ -87,8 +96,9 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
     long i;
     
     // object instantiation
-    if (x == ((t_lightfixture *)object_alloc(lightfixture_class))) {
+    if (x = (t_lightfixture *)object_alloc(lightfixture_class)) {
         if (argc != 2) {
+            post("Requires two inputs [adress, size]");
             return NULL;
         }
         
@@ -101,8 +111,8 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
                 if (i == 0){
                     x->address = atom_getlong(argv+i);
                 } else if (i == 1){
-                    x->outputSize = atom_getlong(argv+1);
-                    x->dataSize = atom_getlong(argv+1);
+                    x->outputSize = atom_getlong(argv+i);
+                    x->dataSize = atom_getlong(argv+i);
                 }
                 object_post((t_object *)x, "arg %ld: long (%ld)", i, atom_getlong(argv+i));
             } else {
@@ -112,9 +122,13 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
         
         x->output = (long*)malloc(sizeof(long) * x->outputSize);
         x->data = (long*)malloc(sizeof(long) * x->dataSize);
-        for (i=0; i < x->outputSize; i++) {
-            x->output[i] = 0;
-            x->data[i] = 0;
+        
+        int index;
+        post("output size %ld",x->outputSize);
+        for (index=0; index < x->outputSize; index++) {
+            x->output[index] = 0;
+            x->data[index] = 0;
+            post("Index = %d", index);
         }
         
         x->outlet2 = outlet_new((t_object *) x, NULL);
@@ -124,6 +138,7 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
 }
 
 void lightfixture_bang(t_lightfixture *x) {
+    post("Banged!");
     // Figuring out full output size
     if (x->outputSize + x->address > x->dataSize) {
         long oldSize = x->dataSize;
@@ -134,20 +149,21 @@ void lightfixture_bang(t_lightfixture *x) {
         for (i = oldSize; i < x->dataSize; i++) {
             x->data[i] = 0;
         }
+        post("making output data bigger");
     }
     
-    t_atom_long fullout[x->dataSize];
-    t_atom_long smallout[x->outputSize];
-    short i;
+    Atom fullout[x->dataSize];
+    Atom smallout[x->outputSize];
+    int i;
     for (i=0; i < x->dataSize; i++) {
         if (i >= x->address && i < x->address+x->outputSize){
             atom_setlong(fullout+i,x->output[i - x->address]);
             atom_setlong(smallout+i-x->address, x->output[i - x->address]);
         } else {
-            atom_setlong(fullout+i,x->data[i]);
+            atom_setlong(fullout + i,x->data[i]);
         }
     }
-    outlet_list(x->outlet1,0L,x->outputSize + x->address, &fullout);
+    outlet_list(x->outlet1,0L, x->dataSize, &fullout);
     outlet_list(x->outlet2,0L, x->outputSize, &smallout);
 }
 
