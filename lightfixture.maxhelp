@@ -9,7 +9,7 @@
 			"modernui" : 1
 		}
 ,
-		"rect" : [ 874.0, 56.0, 398.0, 956.0 ],
+		"rect" : [ 34.0, 56.0, 772.0, 956.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 10.0,
@@ -38,13 +38,24 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-22",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 220.0, 416.0, 150.0, 19.0 ],
+					"style" : "",
+					"text" : "Total DMX Mesage Output"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-10",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 154.0, 233.0, 37.0, 21.0 ],
-					"presentation_rect" : [ 151.0, 232.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "clear"
 				}
@@ -58,25 +69,23 @@
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 232.0, 330.0, 50.0, 33.0 ],
-					"presentation_rect" : [ 229.0, 329.0, 0.0, 0.0 ],
+					"patching_rect" : [ 231.0, 319.0, 51.0, 33.0 ],
 					"style" : "",
-					"text" : "8 33 47 0 0"
+					"text" : "0 0 0 0 0"
 				}
 
 			}
 , 			{
 				"box" : 				{
 					"id" : "obj-14",
-					"linecount" : 4,
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 166.0, 330.0, 50.0, 57.0 ],
-					"presentation_rect" : [ 163.0, 329.0, 0.0, 0.0 ],
+					"patching_rect" : [ 138.5, 409.0, 76.0, 33.0 ],
 					"style" : "",
-					"text" : "14 42 10 0 0 8 33 47 0 0"
+					"text" : "0 0 0 0 0 0 0 0 0 0"
 				}
 
 			}
@@ -89,7 +98,6 @@
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 298.0, 196.0, 50.0, 21.0 ],
-					"presentation_rect" : [ 295.0, 195.0, 0.0, 0.0 ],
 					"style" : ""
 				}
 
@@ -103,7 +111,6 @@
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 246.0, 196.0, 50.0, 21.0 ],
-					"presentation_rect" : [ 243.0, 195.0, 0.0, 0.0 ],
 					"style" : ""
 				}
 
@@ -117,7 +124,6 @@
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
 					"patching_rect" : [ 197.0, 196.0, 50.0, 21.0 ],
-					"presentation_rect" : [ 194.0, 195.0, 0.0, 0.0 ],
 					"style" : ""
 				}
 
@@ -130,7 +136,6 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 197.0, 233.0, 99.0, 21.0 ],
-					"presentation_rect" : [ 194.0, 232.0, 0.0, 0.0 ],
 					"style" : "",
 					"text" : "pak color 0 0 0 0"
 				}
@@ -172,7 +177,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 96.0, 296.0, 50.0, 33.0 ],
 					"style" : "",
-					"text" : "14 42 10 0 0"
+					"text" : "0 0 0 0 0"
 				}
 
 			}
@@ -186,7 +191,7 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 30.0, 296.0, 50.0, 33.0 ],
 					"style" : "",
-					"text" : "14 42 10 0 0"
+					"text" : "0 0 0 0 0"
 				}
 
 			}
@@ -261,9 +266,9 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 9.0, 138.0, 294.0, 19.0 ],
+					"patching_rect" : [ 9.0, 138.0, 353.0, 19.0 ],
 					"style" : "",
-					"text" : "Source code at [Insert github here]"
+					"text" : "Source code at https://github.com/cxsquared/Max-Msp-LightFixture"
 				}
 
 			}
@@ -412,7 +417,7 @@
 					"destination" : [ "obj-14", 1 ],
 					"disabled" : 0,
 					"hidden" : 0,
-					"midpoints" : [ 206.5, 306.0, 206.5, 306.0 ],
+					"midpoints" : [ 206.5, 306.0, 205.0, 306.0 ],
 					"source" : [ "obj-20", 0 ]
 				}
 

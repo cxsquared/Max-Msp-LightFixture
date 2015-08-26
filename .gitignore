@@ -6,6 +6,7 @@
 *~.nib
 DerivedData/
 build/
+bin/
 
 *.pbxuser
 *.mode1v3
