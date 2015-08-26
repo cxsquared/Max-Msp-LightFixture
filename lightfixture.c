@@ -59,7 +59,7 @@ int C74_EXPORT main(void)
     class_register(CLASS_BOX, c); /* CLASS_NOBOX */
     lightfixture_class = c;
     
-    post("Hopefully a lightfixture object");
+    //post("Hopefully a lightfixture object");
     return 0;
 }
 
@@ -101,12 +101,12 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
     // object instantiation
     if (x = (t_lightfixture *)object_alloc(lightfixture_class)) {
         if (argc != 2) {
-            post("Requires two inputs [adress, size]");
+            //post("Requires two inputs [adress, size]");
             return NULL;
         }
         
-        object_post((t_object *)x, "a new %s object was instantiated: %p", s->s_name, x);
-        object_post((t_object *)x, "it has %ld arguments", argc);
+        //object_post((t_object *)x, "a new %s object was instantiated: %p", s->s_name, x);
+        //object_post((t_object *)x, "it has %ld arguments", argc);
         
         // Checking for arguments
         for (i = 0; i < argc; i++) {
@@ -117,7 +117,7 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
                     x->outputSize = atom_getlong(argv+i);
                     x->dataSize = atom_getlong(argv+i);
                 }
-                object_post((t_object *)x, "arg %ld: long (%ld)", i, atom_getlong(argv+i));
+                //object_post((t_object *)x, "arg %ld: long (%ld)", i, atom_getlong(argv+i));
             } else {
                 return NULL;
             }
@@ -127,11 +127,11 @@ void *lightfixture_new(t_symbol *s, long argc, t_atom *argv)
         x->data = (long*)malloc(sizeof(long) * x->dataSize);
         
         int index;
-        post("output size %ld",x->outputSize);
+        //post("output size %ld",x->outputSize);
         for (index=0; index < x->outputSize; index++) {
             x->output[index] = 0;
             x->data[index] = 0;
-            post("Index = %d", index);
+            //post("Index = %d", index);
         }
         
         x->outlet2 = outlet_new((t_object *) x, NULL);
@@ -169,7 +169,7 @@ void lightfixture_bang(t_lightfixture *x) {
         for (i = oldSize; i < x->dataSize; i++) {
             x->data[i] = 0;
         }
-        post("making output data bigger");
+        //post("making output data bigger");
     }
     
     Atom fullout[x->dataSize];
@@ -214,7 +214,7 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
     //post("there are %ld arguments",argc);
     
     if (argc < 4) {
-        post("Color takes 4 ints (address, r, g, b)");
+        //post("Color takes 4 ints (address, r, g, b)");
         return;
     }
     
@@ -252,7 +252,7 @@ void lightfixture_color(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv)
 void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) {
     //post("List in ");
     if (x->dataSize < argc){
-        post("Making data bigger");
+        //post("Making data bigger");
         x->dataSize = argc;
         int *temp = realloc(x->data, sizeof(long) * x->dataSize);
         x->data = temp;
@@ -260,7 +260,7 @@ void lightfixture_list(t_lightfixture *x, t_symbol *s, long argc, t_atom *argv) 
     
     short i;
     for (i = 0; i < argc; i++) {
-        post("Data position %ld is set too %ld", i, atom_getlong(argv+i));
+        //post("Data position %ld is set too %ld", i, atom_getlong(argv+i));
         x->data[i] = sanatizeLong(atom_getlong(argv+i));
     }
     lightfixture_bang(x);
